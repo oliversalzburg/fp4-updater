@@ -22,8 +22,9 @@ export class Fetcher {
           });
 
           response.on("end", () => {
-            console.debug("Received complete document.");
-            resolve(dataBuffer.join(""));
+            const html = dataBuffer.join("");
+            console.debug(`Received complete document (${html.length} bytes).`);
+            resolve(html);
           });
         })
         .on("error", error => {
