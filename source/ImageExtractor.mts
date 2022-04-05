@@ -1,5 +1,7 @@
 export type BootImage = {
-  build: string;
+  buildCode: string;
+  buildNumber: number;
+  gzipped: boolean;
   href: string;
 };
 
@@ -9,15 +11,20 @@ export class ImageExtractor {
 
     // To avoid actual parsing (and dependencies), do it dirty.
     const imageLinkMatcher =
-      /<li><p>build (?<build>[A]\.\d{3}): <a class="reference external" href="(?<href>[^"]*)"/g;
+      /<li><p>build (?<build>[A]\.(?<buildnum>\d{3})): <a class="reference external" href="(?<href>[^"]*)"/g;
     const matches = html.matchAll(imageLinkMatcher);
     for (const match of matches) {
       if (!match.groups) {
-        throw new Error("Regular expression did not resolve any groups!");
+        console.warn("Regular expression did not resolve any groups!");
+        continue;
       }
 
-      console.debug(`Found: ${match.groups.build} → ${match.groups.href}`);
-      images.push({ build: match.groups.build, href: match.groups.href });
+      images.push({
+        buildCode: match.groups.build,
+        buildNumber: Number(match.groups.buildnum),
+        gzipped: match.groups.href.endsWith(".gz"),
+        href: match.groups.href,
+      });
     }
 
     return images;

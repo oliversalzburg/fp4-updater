@@ -6,6 +6,9 @@
 !.yarn/versions
 .pnp.*
 
-build
-node_modules
-output
+build/
+magisk/
+node_modules/
+output/
+
+*.img
