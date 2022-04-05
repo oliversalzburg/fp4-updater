@@ -1,9 +1,13 @@
+import { exec } from "child_process";
 import fs from "fs/promises";
 import path from "path";
 
+export const BOOT_PATCH = "boot_patch.sh";
+export const PATH_BOOT_PATCH = `assets/${BOOT_PATCH}`;
+export const UTIL_FUNCTIONS = "util_functions.sh";
+export const PATH_UTIL_FUNCTIONS = `assets/${UTIL_FUNCTIONS}`;
+
 export class Patcher {
-  static PATH_BOOT_PATCH = "assets/boot_patch.sh";
-  static PATH_UTIL_FUNCTIONS = "assets/util_functions.sh";
   static PATH_MAGISKBOOT = "lib/x86_64/libmagiskboot.so";
   static PATH_MAGISK32 = "lib/armeabi-v7a/libmagisk32.so";
   static PATH_MAGISK64 = "lib/arm64-v8a/libmagisk64.so";
@@ -29,7 +33,7 @@ export class Patcher {
   static async isMagiskPatched() {
     try {
       const utilFunctions = await fs.readFile(
-        path.resolve(Patcher.magiskPathPatched, Patcher.PATH_UTIL_FUNCTIONS),
+        path.resolve(Patcher.magiskPathPatched, UTIL_FUNCTIONS),
         "utf-8"
       );
       const hasOriginal = utilFunctions.match(/^ui_print__original\(\) \{$/m);
@@ -78,12 +82,12 @@ export class Patcher {
     );
 
     await fs.copyFile(
-      path.resolve(Patcher.magiskPath, Patcher.PATH_BOOT_PATCH),
-      path.resolve(Patcher.magiskPathPatched, "boot_patch.sh")
+      path.resolve(Patcher.magiskPath, PATH_BOOT_PATCH),
+      path.resolve(Patcher.magiskPathPatched, BOOT_PATCH)
     );
 
     const utilFunctions = await fs.readFile(
-      path.resolve(Patcher.magiskPath, Patcher.PATH_UTIL_FUNCTIONS),
+      path.resolve(Patcher.magiskPath, PATH_UTIL_FUNCTIONS),
       "utf-8"
     );
     const patchedUtils = utilFunctions
@@ -95,18 +99,38 @@ export class Patcher {
 
 ui_print__original() {`
       )
-      .replace(/getprop/g, "adb getprop");
-    await fs.writeFile(path.resolve(Patcher.magiskPathPatched, "util_functions.sh"), patchedUtils);
+      .replace(/getprop/g, "adb shell getprop");
+    await fs.writeFile(path.resolve(Patcher.magiskPathPatched, UTIL_FUNCTIONS), patchedUtils);
 
     console.warn(` ! Magisk successfully patched into '${Patcher.magiskPathPatched}'.`);
   }
 
   static async patch(targetFile: string) {
     await Patcher.patchMagisk();
-    console.info(
-      `-> sh "${path.resolve(Patcher.magiskPathPatched, "boot_patch.sh")}" "${targetFile}"`
-    );
 
-    return;
+    console.info(` ! Patching '${targetFile}' with Magisk...`);
+    console.info("");
+    return new Promise((resolve, reject) => {
+      exec(
+        `sh "${path.resolve(Patcher.magiskPathPatched, BOOT_PATCH)}" "${path.resolve(targetFile)}"`,
+        (error, stdout, stderr) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+
+          console.log(stdout);
+          resolve(
+            `sh "${path.resolve(Patcher.magiskPathPatched, BOOT_PATCH)}" "${path.resolve(
+              targetFile
+            )}"`
+          );
+        }
+      );
+    });
+  }
+
+  static async copyNewBootImg(filename: string) {
+    return fs.copyFile(path.resolve(Patcher.magiskPathPatched, "new-boot.img"), filename);
   }
 }

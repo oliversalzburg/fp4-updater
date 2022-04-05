@@ -40,14 +40,21 @@ const main = async function () {
 
   if (await Patcher.canPatch()) {
     console.info("Patching image...");
-    await Patcher.patch(imageFilename);
+    const patchCli = await Patcher.patch(imageFilename);
+
+    const imageFilenamePatched = `boot-${latestBuild.buildCode}-patched.img`;
+    await Patcher.copyNewBootImg(imageFilenamePatched);
+    console.info(` = Patched image: ${imageFilenamePatched}`);
+    console.info(` ? To run this patch again : ${patchCli}`);
+    console.info(` ? To deploy to device     : adb push ${imageFilenamePatched} /storage/emulated/0/`);
+    
   } else {
     console.warn("Unable to patch on-site. Patch image on Android device instead.");
     console.info("");
     console.info(" --- Next steps --- ");
     console.info("");
     console.info(`$ adb push boot-${latestBuild.buildCode}.img /storage/emulated/0/`);
-    console.info("$ adb pull /storage/emulated/0/magisk_patched-foo.img");
+    console.info("$ adb pull /storage/emulated/0/Download/magisk_patched-X_Y.img");
     console.info("");
   }
 
