@@ -40,8 +40,9 @@ const main = async function () {
 
   if (await Patcher.canPatch()) {
     console.info("Patching image...");
+    await Patcher.patch(imageFilename);
   } else {
-    console.warn("Unable to patch on-site. Patch file on device instead.");
+    console.warn("Unable to patch on-site. Patch image on Android device instead.");
     console.info("");
     console.info(" --- Next steps --- ");
     console.info("");
