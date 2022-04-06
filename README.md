@@ -1,4 +1,8 @@
-# FairPhone 4 Automatic Root Updater
+# FairPhone 4 Automatic Root Updater (Research)
+
+This does not actually work. Using Magisk to patch an image on a workstation does currently not produce images identical to on-device patching.
+
+Furthermore, _updating_ a phone through this mechanism is likely not a viable option in the first place.
 
 ## Quick Start
 
